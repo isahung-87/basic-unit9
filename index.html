@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit 9 核心字彙 | 單字大師</title>
+    
+    <!-- 引入 Tailwind CSS (樣式庫) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- 引入 React 和 ReactDOM (核心引擎) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    
+    <!-- 引入 Babel (讓瀏覽器看懂程式碼) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* 定義點狀背景樣式 */
+        .bg-dot-pattern {
+            background-image: radial-gradient(#cbd5e1 1px, transparent 1px);
+            background-size: 24px 24px;
+        }
+        /* 隱藏未加載完成的內容避免閃爍 */
+        body {
+            visibility: hidden;
+        }
+    </style>
+</head>
+<body class="bg-slate-100">
+    <!-- 應用程式掛載點 -->
+    <div id="root"></div>
+
+    <!-- 錯誤訊息顯示區 (預設隱藏) -->
+    <div id="error-message" style="display: none; padding: 20px; color: red; text-align: center; margin-top: 50px;">
+        <h2 style="font-size: 24px; font-weight: bold;">糟糕！網頁發生錯誤</h2>
+        <p>請檢查您的網路連線，或確認瀏覽器支援 JavaScript。</p>
+        <pre id="error-detail" style="background: #f0f0f0; padding: 10px; margin-top: 10px; text-align: left; overflow: auto;"></pre>
+    </div>
+
+    <script type="text/babel">
+        // 顯示 Body (React 準備載入)
+        document.body.style.visibility = 'visible';
+
+        try {
+            // 從全域變數取得 React 功能
+            const { useState, useEffect } = React;
+            
+            // ----------------------------------------------------------------------
+            // 內建圖標組件 (SVG Icons) - 移除外部依賴，確保穩定顯示
+            // ----------------------------------------------------------------------
+            const IconBase = ({ children, size = 24, className = "" }) => (
+                <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width={size} 
+                    height={size} 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className={className}
+                >
+                    {children}
+                </svg>
+            );
+
+            const BookOpen = (props) => (
+                <IconBase {...props}>
+                    <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" />
+                    <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" />
+                </IconBase>
+            );
+            
+            const Home = (props) => (
+                <IconBase {...props}>
+                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </IconBase>
+            );
+
+            const LayoutGrid = (props) => (
+                <IconBase {...props}>
+                    <rect width="7" height="7" x="3" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="3" rx="1" />
+                    <rect width="7" height="7" x="14" y="14" rx="1" />
+                    <rect width="7" height="7" x="3" y="14" rx="1" />
+                </IconBase>
+            );
+
+            const Brain = (props) => (
+                <IconBase {...props}>
+                    <path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z" />
+                    <path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z" />
+                    <path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4" />
+                    <path d="M17.599 6.5a3 3 0 0 0 .399-1.375" />
+                    <path d="M6.003 5.125A3 3 0 0 0 6.401 6.5" />
+                    <path d="M3.477 10.896a4 4 0 0 1 .585-.396" />
+                    <path d="M19.938 10.5a4 4 0 0 1 .585.396" />
+                    <path d="M6 18a4 4 0 0 1-1.97-1.375" />
+                    <path d="M17.97 16.625A4 4 0 0 1 16 18" />
+                </IconBase>
+            );
+
+            const Trophy = (props) => (
+                <IconBase {...props}>
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17" />
+                    <path d="M14 14.66V17" />
+                    <path d="M18 2h-6c-2.76 0-5 2.24-5 5 0 2.22 1.45 4.1 3.52 4.76l.96.32C12.42 12.4 13.58 12.4 14.52 12.08l.96-.32C17.55 11.1 19 9.22 19 7c0-2.76-2.24-5-5-5z" />
+                </IconBase>
+            );
+
+            const Volume2 = (props) => (
+                <IconBase {...props}>
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                    <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+                </IconBase>
+            );
+
+            const Sparkles = (props) => (
+                <IconBase {...props}>
+                    <path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z" />
+                    <path d="M5 3v4" />
+                    <path d="M9 3v4" />
+                    <path d="M3 9h4" />
+                    <path d="M3 5h4" />
+                </IconBase>
+            );
+
+            const ArrowLeft = (props) => (
+                <IconBase {...props}>
+                    <path d="m12 19-7-7 7-7" />
+                    <path d="M19 12H5" />
+                </IconBase>
+            );
+
+            const ArrowRight = (props) => (
+                <IconBase {...props}>
+                    <path d="M5 12h14" />
+                    <path d="m12 5 7 7-7 7" />
+                </IconBase>
+            );
+
+            const CheckCircle = (props) => (
+                <IconBase {...props}>
+                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                    <polyline points="22 4 12 14.01 9 11.01" />
+                </IconBase>
+            );
+
+            const XCircle = (props) => (
+                <IconBase {...props}>
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="m15 9-6 6" />
+                    <path d="m9 9 6 6" />
+                </IconBase>
+            );
+
+            const RefreshCw = (props) => (
+                <IconBase {...props}>
+                    <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                    <path d="M21 3v5h-5" />
+                    <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                    <path d="M8 16H3v5" />
+                </IconBase>
+            );
+
+            const Star = (props) => (
+                <IconBase {...props}>
+                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </IconBase>
+            );
+
+            // ----------------------------------------------------------------------
+            // 資料來源：核單 Basic Unit 9.pdf
+            // ----------------------------------------------------------------------
+            const unit9Words = [
+              { 
+                id: 1, 
+                word: "arrival", 
+                pos: "n.", 
+                pron: "/əˈraɪvl/", 
+                meaning: "到來；到達", 
+                sentence: "Flowers begin to grow with the arrival of spring.", 
+                sentence_cn: "花朵在春天到來時開始生長。" 
+              },
+              { 
+                id: 2, 
+                word: "century", 
+                pos: "n.", 
+                pron: "/ˈsentʃəri/", 
+                meaning: "一世紀；百年", 
+                sentence: "The first car was built in the nineteenth century.", 
+                sentence_cn: "第一輛汽車是在十九世紀時建造的。" 
+              },
+              { 
+                id: 3, 
+                word: "eventually", 
+                pos: "adv.", 
+                pron: "/ɪˈventʃuəli/", 
+                meaning: "終於；最終；最後", 
+                sentence: "After a two-hour delay, the plane eventually took off.", 
+                sentence_cn: "經過兩個小時的延誤，飛機終於起飛了。" 
+              },
+              { 
+                id: 4, 
+                word: "release", 
+                pos: "v./n.", 
+                pron: "/rɪˈliːs/", 
+                meaning: "發行；發表；釋放", 
+                sentence: "The singer will release her new album in the spring.", 
+                sentence_cn: "那位歌手會在今年春天發行她的新專輯。" 
+              },
+              { 
+                id: 5, 
+                word: "mobile", 
+                pos: "adj.", 
+                pron: "/ˈmoʊbl/", 
+                meaning: "行動的；可移動的", 
+                sentence: "A mobile health service is available for those who live far from clinics.", 
+                sentence_cn: "有一個行動健康醫療服務可供住在離診所很遠的人使用。" 
+              },
+              { 
+                id: 6, 
+                word: "attractive", 
+                pos: "adj.", 
+                pron: "/əˈtræktɪv/", 
+                meaning: "迷人的；有吸引力的", 
+                sentence: "The actor was known for his attractive smile.", 
+                sentence_cn: "這名演員以其迷人的笑容聞名。" 
+              },
+              { 
+                id: 7, 
+                word: "foldable", 
+                pos: "adj.", 
+                pron: "/ˈfoʊldəbl/", 
+                meaning: "可折疊的", 
+                sentence: "This smartphone is foldable and can fit in your pocket.", 
+                sentence_cn: "這支智慧型手機是可折疊的，它可以放進你的口袋裡。" 
+              },
+              { 
+                id: 8, 
+                word: "model", 
+                pos: "n./v.", 
+                pron: "/ˈmɑːdl/", 
+                meaning: "機型；模型；模特兒", 
+                sentence: "The company put out a new camera model.", 
+                sentence_cn: "那家公司推出一款新型號的相機。" 
+              },
+              { 
+                id: 9, 
+                word: "portable", 
+                pos: "adj.", 
+                pron: "/ˈpɔːrtəbl/", 
+                meaning: "可攜帶的；輕便的", 
+                sentence: "We can take this portable gas stove on our camping trip.", 
+                sentence_cn: "我們可以把這個可攜式瓦斯爐帶去露營。" 
+              },
+              { 
+                id: 10, 
+                word: "mass", 
+                pos: "adj./n.", 
+                pron: "/mæs/", 
+                meaning: "大量的；大規模的", 
+                phrase: "mass production (量產)",
+                sentence: "The explosion caused mass panic in the metro.", 
+                sentence_cn: "這起爆炸在地鐵站引起群眾恐慌。" 
+              },
+              { 
+                id: 11, 
+                word: "production", 
+                pos: "n.", 
+                pron: "/prəˈdʌkʃn/", 
+                meaning: "生產(量)；製作", 
+                sentence: "The new factory means production will increase next year.", 
+                sentence_cn: "這間新工廠意味著明年生產量會增加。" 
+              },
+              { 
+                id: 12, 
+                word: "digital", 
+                pos: "adj.", 
+                pron: "/ˈdɪdʒɪtl/", 
+                meaning: "數位的", 
+                phrase: "digital camera (數位相機)",
+                sentence: "My digital watch has a little light so I can check the time when it is dark.", 
+                sentence_cn: "我的數位手錶有一個小燈，這樣我在黑暗中還是可以看時間。" 
+              },
+              { 
+                id: 13, 
+                word: "display", 
+                pos: "n./v.", 
+                pron: "/dɪˈspleɪ/", 
+                meaning: "顯示器；展示", 
+                phrase: "on display (展示中)",
+                sentence: "The new watch has a color display.", 
+                sentence_cn: "這支新手錶有彩色的顯示器。" 
+              },
+              { 
+                id: 14, 
+                word: "development", 
+                pos: "n.", 
+                pron: "/dɪˈveləpmənt/", 
+                meaning: "發展；進展", 
+                sentence: "The development of the farming industry was the key to the country's improvement.", 
+                sentence_cn: "農業發展是該國進步的關鍵。" 
+              },
+              { 
+                id: 15, 
+                word: "screen", 
+                pos: "n./v.", 
+                pron: "/skriːn/", 
+                meaning: "螢幕；篩選", 
+                phrase: "the big screen (電影) / the small screen (電視)",
+                sentence: "When David touched the screen, the computer turned on.", 
+                sentence_cn: "當大衛觸碰螢幕，電腦就開啟。" 
+              },
+              { 
+                id: 16, 
+                word: "marriage", 
+                pos: "n.", 
+                pron: "/ˈmærɪdʒ/", 
+                meaning: "結合；婚姻", 
+                sentence: "The singer's music is a marriage of funk and hip-hop.", 
+                sentence_cn: "這名歌手的音樂融合了放克和嘻哈。" 
+              },
+              { 
+                id: 17, 
+                word: "revolutionary", 
+                pos: "adj.", 
+                pron: "/ˌrevəˈluːʃəneri/", 
+                meaning: "革命性的；革命的", 
+                sentence: "Charles Darwin created a revolutionary theory about man's origin.", 
+                sentence_cn: "查爾斯·達爾文創立了一套關於人類起源革命性的理論。" 
+              },
+              { 
+                id: 18, 
+                word: "era", 
+                pos: "n.", 
+                pron: "/ˈɪrə/", 
+                meaning: "紀元；時代", 
+                sentence: "The invention of the personal computer started a new era.", 
+                sentence_cn: "個人電腦的發明開啟了一個新紀元。" 
+              },
+              { 
+                id: 19, 
+                word: "technology", 
+                pos: "n.", 
+                pron: "/tekˈnɑːlədʒi/", 
+                meaning: "科技；技術", 
+                sentence: "The car company is hoping that the new technology will make driving safer.", 
+                sentence_cn: "這家汽車公司希望這項新的科技會讓開車更安全。" 
+              },
+              { 
+                id: 20, 
+                word: "launch", 
+                pos: "n./v.", 
+                pron: "/lɔːntʃ/", 
+                meaning: "上市；發起；發射", 
+                sentence: "The technology company just announced the launch of a new product line.", 
+                sentence_cn: "那家科技公司剛宣布將推出新的系列產品。" 
+              }
+            ];
+
+            // ----------------------------------------------------------------------
+            // 主應用程式 - 橫式版面設計
+            // ----------------------------------------------------------------------
+            function Unit9VocabularyApp() {
+              const [currentView, setCurrentView] = useState('home'); 
+              
+              const renderView = () => {
+                switch(currentView) {
+                  case 'cards': return <FlashcardMode words={unit9Words} onBack={() => setCurrentView('home')} />;
+                  case 'basic-game': return <BasicGame words={unit9Words} onBack={() => setCurrentView('home')} />;
+                  case 'advanced-game': return <AdvancedGame words={unit9Words} onBack={() => setCurrentView('home')} />;
+                  default: return <HomeScreen onSelect={setCurrentView} />;
+                }
+              };
+
+              return (
+                <div className="min-h-screen bg-slate-100 text-slate-800 font-sans selection:bg-indigo-100 selection:text-indigo-700 flex items-center justify-center p-6">
+                  {/* 橫式容器：設定固定長寬比或最大寬度，模擬寬螢幕 App */}
+                  <div className="w-full max-w-6xl aspect-[16/10] min-h-[600px] bg-white rounded-3xl shadow-2xl flex flex-col relative overflow-hidden ring-1 ring-slate-900/5">
+                    
+                    {/* Header - 橫貫頂部 */}
+                    <header className="bg-white border-b border-slate-200 px-8 py-4 z-20 flex items-center justify-between shrink-0 h-20">
+                      <div className="flex items-center gap-3">
+                        <div className="bg-indigo-600 p-2 rounded-lg text-white">
+                          <BookOpen size={24} />
+                        </div>
+                        <div>
+                           <h1 className="text-xl font-bold text-slate-800 leading-none">Unit 9 核心字彙</h1>
+                           <span className="text-xs text-slate-400 font-medium">The History of Cell Phones</span>
+                        </div>
+                      </div>
+                      
+                      {currentView !== 'home' && (
+                        <button 
+                          onClick={() => setCurrentView('home')} 
+                          className="group flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-all text-sm font-bold"
+                        >
+                          <Home size={18} className="group-hover:-translate-x-1 transition-transform" />
+                          回到首頁
+                        </button>
+                      )}
+                    </header>
+
+                    {/* Content Area */}
+                    <main className="flex-1 overflow-hidden bg-slate-50/50 relative">
+                      {renderView()}
+                    </main>
+                  </div>
+                </div>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 首頁選單 - 網格佈局 (Grid)
+            // ----------------------------------------------------------------------
+            function HomeScreen({ onSelect }) {
+              return (
+                <div className="h-full flex flex-col justify-center items-center p-12 bg-dot-pattern">
+                  <div className="text-center mb-12 max-w-2xl">
+                    <h2 className="text-4xl font-extrabold text-slate-800 mb-4 tracking-tight">Ready to Learn?</h2>
+                    <p className="text-slate-500 text-lg">
+                      本單元收錄了 20 個關於手機歷史與科技發展的高頻單字。請選擇一種學習模式開始。
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 w-full max-w-5xl">
+                    <MenuButton 
+                      icon={<LayoutGrid size={40} />} 
+                      title="單字卡複習" 
+                      desc="透過翻牌記憶單字、發音與例句搭配。" 
+                      color="bg-blue-500" 
+                      onClick={() => onSelect('cards')} 
+                      delay="0"
+                    />
+                    
+                    <MenuButton 
+                      icon={<Brain size={40} />} 
+                      title="基礎測驗" 
+                      desc="四選一快速認字，訓練直覺反應。" 
+                      color="bg-emerald-500" 
+                      onClick={() => onSelect('basic-game')} 
+                      delay="100"
+                    />
+                    
+                    <MenuButton 
+                      icon={<Trophy size={40} />} 
+                      title="進階挑戰" 
+                      desc="拼字填空測驗，強化單字實際應用。" 
+                      color="bg-purple-500" 
+                      onClick={() => onSelect('advanced-game')} 
+                      delay="200"
+                    />
+                  </div>
+                </div>
+              );
+            }
+
+            function MenuButton({ icon, title, desc, color, onClick, delay }) {
+              return (
+                <button 
+                  onClick={onClick}
+                  className={`relative overflow-hidden ${color} h-64 rounded-3xl p-8 text-left text-white shadow-xl hover:shadow-2xl hover:-translate-y-2 transition-all duration-300 group flex flex-col justify-between`}
+                  style={{ animationDelay: `${delay}ms` }}
+                >
+                  <div className="bg-white/20 w-16 h-16 rounded-2xl flex items-center justify-center backdrop-blur-sm group-hover:scale-110 transition-transform duration-500">
+                    {icon}
+                  </div>
+                  
+                  <div className="relative z-10">
+                    <h3 className="text-2xl font-bold mb-2">{title}</h3>
+                    <p className="text-white/80 leading-relaxed font-medium">{desc}</p>
+                  </div>
+
+                  {/* Decorative Circle */}
+                  <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-150 transition-transform duration-700 ease-out pointer-events-none" />
+                </button>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 單字卡模式 - 寬版置中
+            // ----------------------------------------------------------------------
+            function FlashcardMode({ words, onBack }) {
+              const [index, setIndex] = useState(0);
+              const [isFlipped, setIsFlipped] = useState(false);
+
+              const currentWord = words[index];
+
+              const handleNext = () => {
+                setIsFlipped(false);
+                setTimeout(() => setIndex((prev) => (prev + 1) % words.length), 200);
+              };
+
+              const handlePrev = () => {
+                setIsFlipped(false);
+                setTimeout(() => setIndex((prev) => (prev - 1 + words.length) % words.length), 200);
+              };
+
+              const playAudio = (e) => {
+                e.stopPropagation();
+                const utterance = new SpeechSynthesisUtterance(currentWord.word);
+                utterance.lang = 'en-US';
+                window.speechSynthesis.speak(utterance);
+              };
+
+              return (
+                <div className="flex flex-col h-full items-center justify-center p-8 bg-slate-50">
+                  
+                  {/* Progress & Title */}
+                  <div className="w-full max-w-4xl flex justify-between items-end mb-4 px-4">
+                    <div className="text-3xl font-bold text-slate-800">Flashcards</div>
+                    <div className="text-slate-400 font-mono font-bold tracking-widest">
+                      {String(index + 1).padStart(2, '0')} / {String(words.length).padStart(2, '0')}
+                    </div>
+                  </div>
+
+                  {/* Main Card Area - WIDER aspect ratio */}
+                  <div className="w-full max-w-4xl aspect-[2/1] perspective-1000 relative group cursor-pointer" onClick={() => setIsFlipped(!isFlipped)}>
+                    <div className={`relative w-full h-full duration-500 preserve-3d transition-all ${isFlipped ? 'rotate-y-180' : ''}`} style={{ transformStyle: 'preserve-3d', transform: isFlipped ? 'rotateY(180deg)' : 'rotateY(0deg)' }}>
+                      
+                      {/* 正面 */}
+                      <div className="absolute inset-0 backface-hidden bg-white border border-slate-200 rounded-3xl shadow-xl flex flex-col items-center justify-center p-12 text-center hover:shadow-2xl transition-shadow" style={{ backfaceVisibility: 'hidden' }}>
+                        <span className="absolute top-6 right-6 px-4 py-2 bg-slate-100 text-slate-500 rounded-full text-sm font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+                          Click to Flip
+                        </span>
+                        
+                        <h2 className="text-6xl font-black text-slate-800 mb-6 tracking-tight">{currentWord.word}</h2>
+                        
+                        <button 
+                          onClick={playAudio}
+                          className="flex items-center gap-3 text-slate-500 bg-slate-50 px-6 py-3 rounded-full hover:bg-indigo-600 hover:text-white transition-all group/audio shadow-sm border border-slate-100"
+                        >
+                          <Volume2 size={24} className="group-hover/audio:animate-pulse" />
+                          <span className="font-mono text-xl">{currentWord.pron}</span>
+                        </button>
+                      </div>
+
+                      {/* 背面 - 橫式排版優化 */}
+                      <div className="absolute inset-0 backface-hidden bg-gradient-to-br from-indigo-600 to-indigo-800 text-white rounded-3xl shadow-xl flex overflow-hidden rotate-y-180" style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}>
+                         
+                         {/* Left: Definition */}
+                         <div className="w-2/5 p-10 flex flex-col justify-center items-center border-r border-white/10 bg-black/10">
+                            <span className="bg-white/20 px-4 py-1.5 rounded-full text-indigo-50 font-serif italic text-xl mb-6">{currentWord.pos}</span>
+                            <h3 className="text-4xl font-bold leading-relaxed text-center">{currentWord.meaning}</h3>
+                            {currentWord.phrase && (
+                               <div className="mt-6 flex items-center gap-2 text-yellow-300 font-medium bg-yellow-400/10 px-4 py-2 rounded-lg">
+                                 <Sparkles size={16} />
+                                 <span>{currentWord.phrase}</span>
+                               </div>
+                            )}
+                         </div>
+                         
+                         {/* Right: Sentences */}
+                         <div className="w-3/5 p-10 flex flex-col justify-center bg-white/5">
+                           <div className="space-y-6">
+                             <div>
+                               <div className="flex items-center gap-2 mb-3 opacity-60">
+                                  <div className="w-1.5 h-1.5 bg-indigo-300 rounded-full"></div>
+                                  <p className="text-indigo-200 text-sm uppercase tracking-widest font-bold">Example Sentence</p>
+                               </div>
+                               <p className="text-2xl font-medium leading-snug text-white">"{currentWord.sentence}"</p>
+                             </div>
+                             <div className="h-px w-20 bg-white/20"></div>
+                             <p className="text-lg text-indigo-100 leading-snug">{currentWord.sentence_cn}</p>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Controls */}
+                  <div className="flex items-center gap-6 mt-8">
+                    <button onClick={handlePrev} className="w-14 h-14 rounded-full bg-white text-slate-600 shadow-lg hover:bg-slate-50 hover:scale-110 active:scale-95 transition flex items-center justify-center border border-slate-100">
+                      <ArrowLeft size={24} />
+                    </button>
+                    <button onClick={() => setIsFlipped(!isFlipped)} className="px-10 py-4 rounded-full bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 hover:-translate-y-1 active:scale-95 transition min-w-[200px]">
+                      {isFlipped ? "Show Word" : "Show Meaning"}
+                    </button>
+                    <button onClick={handleNext} className="w-14 h-14 rounded-full bg-white text-slate-600 shadow-lg hover:bg-slate-50 hover:scale-110 active:scale-95 transition flex items-center justify-center border border-slate-100">
+                      <ArrowRight size={24} />
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 基礎測驗 - 左右分割 (Split View)
+            // ----------------------------------------------------------------------
+            function BasicGame({ words, onBack }) {
+              const [questions, setQuestions] = useState([]);
+              const [currentIndex, setCurrentIndex] = useState(0);
+              const [score, setScore] = useState(0);
+              const [showResult, setShowResult] = useState(false);
+              const [selectedOption, setSelectedOption] = useState(null);
+              const [isCorrect, setIsCorrect] = useState(null);
+
+              useEffect(() => {
+                const shuffled = [...words].sort(() => 0.5 - Math.random()).slice(0, 10);
+                const gameQuestions = shuffled.map(word => {
+                  const distractors = words
+                    .filter(w => w.id !== word.id)
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 3)
+                    .map(w => w.meaning);
+                  
+                  const options = [...distractors, word.meaning].sort(() => 0.5 - Math.random());
+                  
+                  return { target: word, options: options };
+                });
+                setQuestions(gameQuestions);
+              }, [words]);
+
+              const handleAnswer = (option) => {
+                if (selectedOption) return;
+
+                const currentQ = questions[currentIndex];
+                const correct = option === currentQ.target.meaning;
+                
+                setSelectedOption(option);
+                setIsCorrect(correct);
+                if (correct) setScore(s => s + 10);
+
+                setTimeout(() => {
+                  if (currentIndex < questions.length - 1) {
+                    setCurrentIndex(c => c + 1);
+                    setSelectedOption(null);
+                    setIsCorrect(null);
+                  } else {
+                    setShowResult(true);
+                  }
+                }, 1200);
+              };
+
+              if (questions.length === 0) return <div className="p-8 text-center">Loading...</div>;
+
+              if (showResult) {
+                return <ResultScreen score={score} total={questions.length * 10} onRetry={() => window.location.reload()} onHome={onBack} />;
+              }
+
+              const currentQ = questions[currentIndex];
+
+              return (
+                <div className="grid grid-cols-2 h-full">
+                  {/* Left Panel: Question */}
+                  <div className="bg-slate-900 text-white flex flex-col items-center justify-center p-12 relative overflow-hidden">
+                    <div className="absolute top-0 left-0 w-full h-2 bg-slate-800">
+                       <div 
+                         className="h-full bg-emerald-500 transition-all duration-300" 
+                         style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+                       />
+                    </div>
+                    
+                    <div className="absolute top-8 left-8 text-slate-400 font-mono">Q{currentIndex + 1}</div>
+                    <div className="absolute top-8 right-8 font-bold text-emerald-400">Score: {score}</div>
+
+                    <div className="relative z-10 text-center">
+                        <span className="inline-block px-4 py-1.5 rounded-full border border-slate-700 text-slate-300 font-serif italic text-xl mb-8">
+                          {currentQ.target.pos}
+                        </span>
+                        <h2 className="text-6xl md:text-7xl font-black mb-4 tracking-tight">{currentQ.target.word}</h2>
+                        <div className="w-16 h-1 bg-emerald-500 mx-auto rounded-full mt-6"></div>
+                    </div>
+
+                    {/* Decor */}
+                    <div className="absolute -bottom-20 -left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                  </div>
+
+                  {/* Right Panel: Options */}
+                  <div className="bg-white p-12 flex flex-col justify-center">
+                    <h3 className="text-xl text-slate-500 font-bold mb-8 text-center uppercase tracking-widest">Select the correct meaning</h3>
+                    <div className="grid grid-cols-1 gap-4 max-w-md mx-auto w-full">
+                      {currentQ.options.map((option, idx) => {
+                        let btnClass = "group relative p-6 rounded-2xl border-2 text-xl font-bold transition-all text-left flex items-center justify-between overflow-hidden ";
+                        let icon = <div className="w-6 h-6 rounded-full border-2 border-slate-200 group-hover:border-indigo-400 transition-colors" />;
+                        
+                        if (selectedOption) {
+                          if (option === currentQ.target.meaning) {
+                            btnClass += "bg-emerald-50 border-emerald-500 text-emerald-800 shadow-md scale-[1.02] z-10"; // Correct
+                            icon = <CheckCircle className="text-emerald-500" />;
+                          } else if (option === selectedOption) {
+                            btnClass += "bg-red-50 border-red-500 text-red-800 opacity-80"; // Wrong
+                            icon = <XCircle className="text-red-500" />;
+                          } else {
+                            btnClass += "bg-slate-50 border-slate-100 text-slate-300 opacity-40 blur-[1px] scale-95"; // Others
+                          }
+                        } else {
+                          btnClass += "bg-white border-slate-200 hover:border-indigo-500 hover:bg-indigo-50 text-slate-700 shadow-sm hover:shadow-md hover:-translate-y-1";
+                        }
+
+                        return (
+                          <button 
+                            key={idx} 
+                            className={btnClass}
+                            onClick={() => handleAnswer(option)}
+                            disabled={!!selectedOption}
+                          >
+                            <span className="relative z-10">{option}</span>
+                            {selectedOption && (option === currentQ.target.meaning || option === selectedOption) ? icon : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 進階挑戰 - 寬版優化
+            // ----------------------------------------------------------------------
+            function AdvancedGame({ words, onBack }) {
+              const [questions, setQuestions] = useState([]);
+              const [currentIndex, setCurrentIndex] = useState(0);
+              const [inputValue, setInputValue] = useState("");
+              const [score, setScore] = useState(0);
+              const [showResult, setShowResult] = useState(false);
+              const [feedback, setFeedback] = useState(null);
+
+              useEffect(() => {
+                const gameQ = [...words]
+                  .sort(() => 0.5 - Math.random())
+                  .slice(0, 5)
+                  .map(w => ({
+                    ...w,
+                    maskedSentence: w.sentence.replace(new RegExp(w.word, 'gi'), "_______")
+                  }));
+                setQuestions(gameQ);
+              }, [words]);
+
+              const handleSubmit = (e) => {
+                e.preventDefault();
+                if (feedback) return;
+
+                const currentQ = questions[currentIndex];
+                const isMatch = inputValue.trim().toLowerCase() === currentQ.word.toLowerCase();
+
+                if (isMatch) {
+                  setScore(s => s + 20);
+                  setFeedback('correct');
+                  const u = new SpeechSynthesisUtterance("Correct!");
+                  window.speechSynthesis.speak(u);
+                } else {
+                  setFeedback('incorrect');
+                }
+
+                setTimeout(() => {
+                  if (currentIndex < questions.length - 1) {
+                    setCurrentIndex(c => c + 1);
+                    setInputValue("");
+                    setFeedback(null);
+                  } else {
+                    setShowResult(true);
+                  }
+                }, 1800);
+              };
+
+              if (questions.length === 0) return <div className="p-8 text-center">Loading...</div>;
+              if (showResult) return <ResultScreen score={score} total={questions.length * 20} onRetry={() => window.location.reload()} onHome={onBack} />;
+
+              const currentQ = questions[currentIndex];
+
+              return (
+                <div className="flex flex-col h-full w-full max-w-5xl mx-auto px-12 py-8">
+                   {/* Top Bar */}
+                   <div className="flex justify-between items-center mb-8">
+                    <div className="flex gap-2">
+                      {questions.map((_, i) => (
+                        <div key={i} className={`h-2.5 w-12 rounded-full transition-colors ${i === currentIndex ? 'bg-purple-600' : i < currentIndex ? 'bg-purple-300' : 'bg-slate-200'}`} />
+                      ))}
+                    </div>
+                    <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-full shadow-sm border border-slate-100">
+                       <Trophy size={18} className="text-yellow-500" />
+                       <span className="font-bold text-slate-600">Score: {score}</span>
+                    </div>
+                  </div>
+
+                  <div className="flex-1 flex flex-col justify-center items-center">
+                    
+                    {/* Sentence Card */}
+                    <div className="w-full bg-white p-10 rounded-3xl shadow-xl mb-10 border-l-8 border-purple-500 relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-4 opacity-10">
+                          <Brain size={120} />
+                       </div>
+
+                       <p className="text-sm text-purple-600 font-bold mb-4 uppercase tracking-widest flex items-center gap-2">
+                         <span className="w-2 h-2 rounded-full bg-purple-600"></span>
+                         Fill in the blank
+                       </p>
+                       
+                       <p className="text-3xl md:text-4xl leading-relaxed font-medium text-slate-800 relative z-10">
+                        {feedback === 'correct' || feedback === 'incorrect' 
+                          ? currentQ.sentence.split(new RegExp(`(${currentQ.word})`, 'gi')).map((part, i) => 
+                              part.toLowerCase() === currentQ.word.toLowerCase() 
+                                ? <span key={i} className={`font-bold underline decoration-4 underline-offset-4 ${feedback === 'correct' ? 'text-emerald-600 decoration-emerald-400' : 'text-red-500 decoration-red-300'}`}>{part}</span> 
+                                : part
+                            )
+                          : currentQ.maskedSentence
+                        }
+                      </p>
+                      
+                      <div className="mt-8 pt-6 border-t border-slate-100 flex items-center gap-3 text-slate-500">
+                        <span className="bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded font-bold uppercase tracking-wider">Hint</span>
+                        <span className="text-lg">{currentQ.meaning} <span className="text-slate-300 mx-2">|</span> <span className="font-serif italic">{currentQ.pos}</span></span>
+                      </div>
+                    </div>
+
+                    {/* Input Area */}
+                    <form onSubmit={handleSubmit} className="w-full max-w-2xl relative group">
+                      <input 
+                        type="text" 
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        disabled={!!feedback}
+                        placeholder="Type the missing word here..."
+                        className={`w-full p-6 pr-32 rounded-2xl border-2 text-2xl font-bold outline-none transition-all shadow-sm
+                          ${feedback === 'correct' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 
+                            feedback === 'incorrect' ? 'border-red-500 bg-red-50 text-red-700' : 
+                            'border-slate-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-500/10'}`}
+                        autoFocus
+                      />
+                      <button 
+                        type="submit"
+                        disabled={!inputValue || !!feedback}
+                        className="absolute right-3 top-3 bottom-3 bg-slate-900 text-white px-8 rounded-xl font-bold hover:bg-purple-600 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 transition-all flex items-center gap-2"
+                      >
+                        Check <ArrowRight size={18} />
+                      </button>
+                    </form>
+
+                    {feedback === 'incorrect' && (
+                      <div className="mt-6 text-center animate-in fade-in slide-in-from-bottom-2">
+                        <p className="text-red-500 font-bold mb-1 uppercase text-sm tracking-wider">Correct Answer</p>
+                        <p className="text-3xl font-black text-slate-800 tracking-tight">{currentQ.word}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 結果畫面
+            // ----------------------------------------------------------------------
+            function ResultScreen({ score, total, onRetry, onHome }) {
+              const percentage = Math.round((score / total) * 100);
+              let message = "";
+              let IconComponent = null;
+
+              if (percentage === 100) {
+                message = "Perfect! 單字大師就是你！";
+                IconComponent = Trophy;
+              } else if (percentage >= 80) {
+                message = "Great Job! 非常優秀！";
+                IconComponent = Star;
+              } else {
+                message = "Keep Practicing! 再接再厲！";
+                IconComponent = RefreshCw;
+              }
+
+              return (
+                <div className="flex flex-col items-center justify-center h-full p-12 text-center bg-slate-50 animate-in fade-in zoom-in duration-500">
+                  <div className="flex gap-8 items-center bg-white p-12 rounded-3xl shadow-xl">
+                    <div className="p-8 bg-slate-50 rounded-full">
+                        <IconComponent size={80} className={percentage === 100 ? "text-yellow-400" : percentage >= 80 ? "text-emerald-400" : "text-indigo-400"} />
+                    </div>
+                    <div className="text-left">
+                        <h2 className="text-4xl font-bold text-slate-800 mb-2">測驗完成</h2>
+                        <p className="text-slate-500 text-xl mb-6">{message}</p>
+                        
+                        <div className="flex items-baseline gap-2">
+                            <span className="text-7xl font-black text-indigo-600">{score}</span>
+                            <span className="text-2xl text-slate-300 font-bold">/ {total}</span>
+                        </div>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-4 mt-12 w-full max-w-md">
+                    <button onClick={onRetry} className="flex-1 py-4 bg-indigo-600 text-white rounded-xl font-bold shadow-lg hover:bg-indigo-700 transition active:scale-95 flex items-center justify-center gap-2">
+                      <RefreshCw size={20} /> 再試一次
+                    </button>
+                    <button onClick={onHome} className="flex-1 py-4 bg-white text-slate-600 border border-slate-200 rounded-xl font-bold hover:bg-slate-50 transition active:scale-95">
+                      回首頁
+                    </button>
+                  </div>
+                </div>
+              );
+            }
+
+            // ----------------------------------------------------------------------
+            // 啟動 React
+            // ----------------------------------------------------------------------
+            const root = ReactDOM.createRoot(document.getElementById('root'));
+            root.render(<Unit9VocabularyApp />);
+
+        } catch (error) {
+            // 捕捉並顯示錯誤
+            document.getElementById('error-message').style.display = 'block';
+            document.getElementById('error-detail').textContent = error.toString();
+            console.error("Application Error:", error);
+        }
+    </script>
+</body>
+</html>
